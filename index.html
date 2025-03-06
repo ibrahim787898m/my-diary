@@ -351,6 +351,12 @@
                 <!-- Entries will be dynamically added here -->
             </div>
 
+            <div id="pagination-controls" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+    <button id="prev-page-btn" disabled>Previous</button>
+    <span id="page-info">Page 1</span>
+    <button id="next-page-btn" disabled>Next</button>
+            </div>
+
             <div id="empty-state" class="empty-state" style="display: none;">
                 <p>Your diary is empty. Create your first entry to get started.</p>
                 <button class="new-entry-btn" id="empty-new-entry-btn">Create First Entry</button>
@@ -761,6 +767,77 @@ function loadEntries() {
             `;
         });
             }
+
+        // Pagination Variables
+let currentPage = 1;
+const entriesPerPage = 5;
+let totalEntries = 0;
+let lastVisible = null;
+let firstVisible = null;
+
+// Get pagination controls
+const prevPageBtn = document.getElementById('prev-page-btn');
+const nextPageBtn = document.getElementById('next-page-btn');
+const pageInfo = document.getElementById('page-info');
+
+// Function to Load Entries with Pagination
+function loadEntries(direction = "next") {
+    entriesContainer.innerHTML = '';
+
+    let query = db.collection('diary_entries').orderBy('createdAt', 'desc').limit(entriesPerPage);
+
+    if (direction === "next" && lastVisible) {
+        query = query.startAfter(lastVisible);
+    } else if (direction === "prev" && firstVisible) {
+        query = query.endBefore(firstVisible);
+    }
+
+    query.get().then(snapshot => {
+        if (snapshot.empty) {
+            if (direction === "next") nextPageBtn.disabled = true;
+            if (direction === "prev") prevPageBtn.disabled = true;
+            return;
+        }
+
+        // Track first and last visible entry for pagination
+        firstVisible = snapshot.docs[0];
+        lastVisible = snapshot.docs[snapshot.docs.length - 1];
+
+        snapshot.forEach(doc => {
+            createEntryCard(doc.id, doc.data());
+        });
+
+        // Enable/Disable pagination buttons
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = snapshot.docs.length < entriesPerPage;
+
+        // Update page info
+        pageInfo.textContent = `Page ${currentPage}`;
+    }).catch(error => {
+        console.error("Error loading entries:", error);
+        entriesContainer.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--error); padding: 30px;">
+                Error loading entries. Please try refreshing the page.
+            </div>
+        `;
+    });
+}
+
+// Pagination Button Events
+prevPageBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        loadEntries("prev");
+    }
+});
+
+nextPageBtn.addEventListener('click', () => {
+    currentPage++;
+    loadEntries("next");
+});
+
+// Initial Load
+loadEntries();
         
         // IMPORTANT: Uncomment the line below ONCE to create your account
         // Then comment it out again for security
