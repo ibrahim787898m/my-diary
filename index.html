@@ -661,6 +661,8 @@ const firebaseConfig = {
     let currentCalendarDate = new Date();
     let entryDates = new Set();
 
+    checkExistingSession()
+
     // User Authentication
     loginBtn.addEventListener('click', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
@@ -669,45 +671,96 @@ const firebaseConfig = {
     });
 
     // Simple password authentication
-    async function handleLogin() {
-        const password = passwordInput.value;
-        if (!password) {
-            showMessage(loginMessage, 'Please enter a password', 'error');
+    // Updated login handling function
+async function handleLogin() {
+    const password = passwordInput.value;
+    if (!password) {
+        showMessage(loginMessage, 'Please enter a password', 'error');
+        return;
+    }
+
+    try {
+        // Instead of using Firebase Authentication, we'll use a simpler local authentication
+        // This avoids the "restricted to administrator" error with Firebase anonymous auth
+        
+        // In a real app, you'd want to hash passwords and store them securely
+        // This is a simplified version for demonstration
+        if (password === 'password123') { // Replace with your password
+            // Set up a local user state
+            currentUser = {
+                id: 'local-user',
+                isAuthenticated: true
+            };
+            
+            // Store auth state in localStorage for persistence
+            localStorage.setItem('diaryAuth', JSON.stringify({
+                isAuthenticated: true,
+                timestamp: Date.now()
+            }));
+            
+            showMessage(loginMessage, 'Access granted', 'success');
+            switchToView(diarySection);
+            switchToView(logoutBtn);
+            hideView(loginSection);
+            loadEntries();
+            populateYearFilter();
+        } else {
+            showMessage(loginMessage, 'Incorrect password', 'error');
+        }
+    } catch (error) {
+        showMessage(loginMessage, 'Login failed: ' + error.message, 'error');
+    }
+}
+
+// Updated logout function
+function handleLogout() {
+    currentUser = null;
+    localStorage.removeItem('diaryAuth');
+    passwordInput.value = '';
+    switchToView(loginSection);
+    hideView(diarySection);
+    hideView(logoutBtn);
+}
+
+// Check for existing session on page load
+function checkExistingSession() {
+    const authData = JSON.parse(localStorage.getItem('diaryAuth') || '{}');
+    
+    if (authData.isAuthenticated) {
+        // Optional: Check if the session is still valid (e.g., not expired)
+        const sessionAge = Date.now() - authData.timestamp;
+        const sessionLimitMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+        
+        if (sessionAge < sessionLimitMs) {
+            currentUser = {
+                id: 'local-user',
+                isAuthenticated: true
+            };
+            
+            switchToView(diarySection);
+            switchToView(logoutBtn);
+            hideView(loginSection);
+            loadEntries();
+            populateYearFilter();
             return;
         }
-
-        try {
-            // Using anonymous auth with password verification
-            await auth.signInAnonymously();
-            
-            // In a real app, you'd verify the password against a secure hash
-            // This is a simplified version for demonstration
-            if (password === '!h3y1brA7878q8@m') { // Replace with your password
-                showMessage(loginMessage, 'Access granted', 'success');
-                switchToView(diarySection);
-                switchToView(logoutBtn);
-                hideView(loginSection);
-                loadEntries();
-                populateYearFilter();
-            } else {
-                showMessage(loginMessage, 'Incorrect password', 'error');
-            }
-        } catch (error) {
-            showMessage(loginMessage, 'Login failed: ' + error.message, 'error');
-        }
     }
+    
+    // No valid session found
+    switchToView(loginSection);
+    hideView(diarySection);
+    hideView(logoutBtn);
+}
 
-    function handleLogout() {
-        auth.signOut().then(() => {
-            currentUser = null;
-            passwordInput.value = '';
-            switchToView(loginSection);
-            hideView(diarySection);
-            hideView(logoutBtn);
-        }).catch((error) => {
-            console.error('Logout error:', error);
-        });
-    }
+// Call this function when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing initialization code ...
+    
+    // Check for existing session
+    checkExistingSession();
+    
+    // ... rest of your code ...
+});
 
     // Diary entries management
     newEntryBtn.addEventListener('click', openNewEntryModal);
