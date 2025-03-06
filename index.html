@@ -1008,40 +1008,58 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function addCalendarDay(day, className, date) {
-        const dayElement = document.createElement('div');
-        dayElement.className = 'calendar-day ' + className;
-        dayElement.textContent = day;
-        
-        if (className.includes('has-entry')) {
-            dayElement.addEventListener('click', () => {
-                // Filter entries by this date
-                searchInput.value = '';
-                monthSelect.value = date.getMonth();
-                yearSelect.value = date.getFullYear();
-                applyFilters();
-                
-                // Highlight entries from this day
-                const dayStart = new Date(date.setHours(0, 0, 0, 0));
-                const dayEnd = new Date(date.setHours(23, 59, 59, 999));
-                
-                filteredEntries = allEntries.filter(entry => {
-                    const entryDate = new Date(entry.timestamp);
-                    return entryDate >= dayStart && entryDate <= dayEnd;
-                });
-                
-                currentPage = 1;
-                displayEntries();
-            });
-        }
-        
-        calendarDays.appendChild(dayElement);
-    }
 
-    function hasEntry(date) {
-        const dateString = date.toLocaleDateString();
-        return entryDates.has(dateString);
+// Updated function to add calendar day elements with proper date filtering
+function addCalendarDay(day, className, date) {
+    const dayElement = document.createElement('div');
+    dayElement.className = 'calendar-day ' + className;
+    dayElement.textContent = day;
+    
+    // Format the date string in a consistent format
+    const dateString = date.toLocaleDateString();
+    
+    // If this day has entries, make it clickable
+    if (entryDates.has(dateString)) {
+        dayElement.classList.add('has-entry');
+        dayElement.addEventListener('click', () => {
+            // Reset the search input
+            searchInput.value = '';
+            
+            // Filter to the specific day
+            const dayStart = new Date(date);
+            dayStart.setHours(0, 0, 0, 0);
+            
+            const dayEnd = new Date(date);
+            dayEnd.setHours(23, 59, 59, 999);
+            
+            // Filter entries for this specific day
+            filteredEntries = allEntries.filter(entry => {
+                const entryDate = new Date(entry.timestamp);
+                return entryDate >= dayStart && entryDate <= dayEnd;
+            });
+            
+            // Update filter dropdowns to match the selected date
+            monthSelect.value = date.getMonth();
+            yearSelect.value = date.getFullYear();
+            
+            // Reset to first page and display the filtered entries
+            currentPage = 1;
+            displayEntries();
+        });
     }
+    
+    calendarDays.appendChild(dayElement);
+}
+    
+
+    // Updated hasEntry function to properly check for entries on a specific date
+function hasEntry(date) {
+    // Format the date in a consistent way for comparison
+    const dateString = date.toLocaleDateString();
+    
+    // Check if we have any entries for this date
+    return entryDates.has(dateString);
+}
 
     function navigateMonth(change) {
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() + change);
