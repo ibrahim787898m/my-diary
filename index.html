@@ -768,11 +768,13 @@ function loadEntries() {
         });
             }
 
+
         // Pagination Variables
 let currentPage = 1;
 const entriesPerPage = 5;
 let lastVisible = null;
 let firstVisible = null;
+let isFirstLoad = true;
 let totalEntries = 0;
 
 // Get pagination controls
@@ -780,7 +782,7 @@ const prevPageBtn = document.getElementById('prev-page-btn');
 const nextPageBtn = document.getElementById('next-page-btn');
 const pageInfo = document.getElementById('page-info');
 
-// Load total entries count (for navigation)
+// Load total number of entries to control navigation
 db.collection('diary_entries').get().then(snapshot => {
     totalEntries = snapshot.size;
     updatePaginationButtons();
@@ -788,7 +790,9 @@ db.collection('diary_entries').get().then(snapshot => {
 
 // Load Entries with Pagination
 function loadEntries(direction = "next") {
-    entriesContainer.innerHTML = ''; // Clear previous entries
+    if (!isFirstLoad) {
+        entriesContainer.innerHTML = ''; // Clear entries only if it's not the first load
+    }
 
     let query = db.collection('diary_entries')
         .orderBy('createdAt', 'desc')
@@ -808,6 +812,11 @@ function loadEntries(direction = "next") {
 
         firstVisible = snapshot.docs[0];
         lastVisible = snapshot.docs[snapshot.docs.length - 1];
+
+        if (isFirstLoad) {
+            entriesContainer.innerHTML = ''; // Ensure it's fully cleared on first load
+            isFirstLoad = false;
+        }
 
         snapshot.forEach(doc => {
             createEntryCard(doc.id, doc.data());
@@ -846,7 +855,9 @@ nextPageBtn.addEventListener('click', () => {
 });
 
 // Initial Load
-loadEntries();
+window.onload = () => {
+    loadEntries();
+};
         
         // IMPORTANT: Uncomment the line below ONCE to create your account
         // Then comment it out again for security
