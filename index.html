@@ -390,6 +390,7 @@
         <!-- Diary Section -->
         <div id="diary-section" style="display: none;">
             <div class="diary-controls">
+                <input type="text" id="calendar-picker" class="search-box" placeholder="MM/DD/YYYY" onfocus="(this.type='date')" style="background:white">
                 <input type="text" id="search-input" class="search-box" placeholder="Search entries...">
                 <button class="new-entry-btn" id="new-entry-btn">New Entry</button>
             </div>
@@ -901,6 +902,71 @@ const firebaseConfig = {
                     }
                 });
         }
+
+        // Calendar Date Picker
+const calendarPicker = document.getElementById('calendar-picker');
+
+// Update entries when the user selects a date
+calendarPicker.addEventListener('change', () => {
+    loadEntries();
+});
+
+// Modify loadEntries function to filter by selected date
+function loadEntries() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedDate = calendarPicker.value; // Format: YYYY-MM-DD
+    entriesContainer.innerHTML = '';
+
+    db.collection('diary_entries')
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                entriesContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            entriesContainer.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            let hasVisibleEntries = false;
+
+            snapshot.forEach(doc => {
+                const entry = doc.data();
+                const entryId = doc.id;
+
+                if (!entry.createdAt) return;
+                const entryDate = entry.createdAt.toDate().toISOString().split('T')[0]; // Convert to YYYY-MM-DD format
+
+                // Filter by date and search term
+                if ((selectedDate && entryDate !== selectedDate) || 
+                    (searchTerm && !entry.title.toLowerCase().includes(searchTerm) && !entry.content.toLowerCase().includes(searchTerm))) {
+                    return;
+                }
+
+                hasVisibleEntries = true;
+                createEntryCard(entryId, entry);
+            });
+
+            // No matching entries
+            if (!hasVisibleEntries) {
+                entriesContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; color: var(--text-light); padding: 30px;">
+                        No entries found for ${selectedDate ? `this date (${selectedDate})` : "your search."}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error("Error loading entries:", error);
+            entriesContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; color: var(--error); padding: 30px;">
+                    Error loading entries. Please try refreshing the page.
+                </div>
+            `;
+        });
+}
         
         // IMPORTANT: Uncomment the line below ONCE to create your account
         // Then comment it out again for security
