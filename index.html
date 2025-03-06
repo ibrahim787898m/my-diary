@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal Diary</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #eff6ff;
+            --background: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .login-container, .diary-entry {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin: auto;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #logout-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 500;
+            width: auto;
+            padding: 5px 10px;
+        }
+
+        #logout-btn:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        .success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .diary-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: 250px;
+            font-size: 0.95rem;
+        }
+
+        .new-entry-btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .new-entry-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .entries-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .entry-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .entry-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .entry-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        .entry-date {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .entry-preview {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            flex-grow: 1;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            width: auto;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .delete-btn {
+            background-color: var(--error);
+        }
+
+        .delete-btn:hover {
+            background-color: #dc2626;
+        }
+
+        /* Pagination styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            padding: 10px 0;
+        }
+
+        .pagination-button {
+            background-color: var(--card-bg);
+            color: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            width: auto;
+        }
+
+        .pagination-button:hover {
+            background-color: var(--primary-light);
+        }
+
+        .pagination-button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination-button.disabled {
+            color: var(--text-light);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .pagination-info {
+            margin: 0 15px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Calendar Navigation Styles */
+        .calendar-nav {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .calendar-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-btn {
+            background-color: var(--background);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            width: auto;
+        }
+
+        .calendar-btn:hover {
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            padding: 5px;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background-color: var(--primary-light);
+        }
+
+        .calendar-day.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .calendar-day.has-entries {
+            font-weight: 600;
+            position: relative;
+        }
+
+        .calendar-day.has-entries::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: var(--primary);
+        }
+
+        .calendar-day.active.has-entries::after {
+            background-color: white;
+        }
+
+        .calendar-day.other-month {
+            color: var(--text-light);
+            opacity: 0.5;
+        }
+
+        .navigation-container {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .nav-section {
+            flex: 1;
+        }
+
+        .view-selector {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+
+        .view-option {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .view-option.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .view-option:hover:not(.active) {
+            background: var(--primary-light);
+        }
+
+        .date-jump {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-jump select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .date-jump button {
+            padding: 8px 15px;
+            width: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .diary-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .entries-list {
+                grid-template-columns: 1fr;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+            }
+
+            .navigation-container {
+                flex-direction: column;
+            }
+
+            .calendar-grid {
+                font-size: 0.8rem;
+            }
+            
+            .calendar-day {
+                padding: 5px 0;
+            }
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            margin: 50px auto;
+            color: var(--text-light);
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>My Personal Diary</h1>
+            <button id="logout-btn" style="display: none;">Logout</button>
+        </header>
+
+        <!-- Login Section -->
+        <div id="login-section">
+            <div class="login-container">
+                <h2 class="form-title">Access Your Diary</h2>
+                <div id="login-message" class="message"></div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+                <button id="login-btn">Unlock Diary</button>
+            </div>
+        </div>
+
+        <!-- Diary Section -->
+        <div id="diary-section" style="display: none;">
+            <!-- View Selection and Date Navigation -->
+            <div class="navigation-container">
+                <div class="nav-section">
+                    <div class="view-selector">
+                        <div class="view-option active" data-view="entries">Entries</div>
+                        <div class="view-option" data-view="calendar">Calendar</div>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="date-jump">
+                        <select id="month-select">
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                        <select id="year-select"></select>
+                        <button id="jump-to-date-btn" class="calendar-btn">Go</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Navigation -->
+            <div id="calendar-view" class="calendar-nav" style="display: none;">
+                <div class="calendar-header">
+                    <div class="calendar-title" id="calendar-month-year">March 2025</div>
+                    <div class="calendar-controls">
+                        <button id="prev-month-btn" class="calendar-btn">←</button>
+                        <button id="today-btn" class="calendar-btn">Today</button>
+                        <button id="next-month-btn" class="calendar-btn">→</button>
+                    </div>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+                    <!-- Calendar days will be added dynamically here -->
+                </div>
+            </div>
+
+            <div id="entries-view">
+                <div class="diary-controls">
+                    <input type="text" id="search-input" class="search-box" placeholder="Search entries...">
+                    <button class="new-entry-btn" id="new-entry-btn">New Entry</button>
+                </div>
+
+                <div id="entries-container" class="entries-list">
+                    <!-- Entries will be dynamically added here -->
+                </div>
+
+                <div id="pagination-container" class="pagination" style="display: none;">
+                    <!-- Pagination controls will be added here -->
+                </div>
+
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <p>Your diary is empty. Create your first entry to get started.</p>
+                    <button class="new-entry-btn" id="empty-new-entry-btn">Create First Entry</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entry Modal -->
+        <div id="entry-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal">&times;</button>
+                <h3 id="modal-title" class="form-title">New Diary Entry</h3>
+                
+                <input type="hidden" id="entry-id">
+                <div class="form-group">
+                    <label for="entry-title">Title</label>
+                    <input type="text" id="entry-title" placeholder="Name your entry">
+                </div>
+                <div class="form-group">
+                    <label for="entry-content">Content</label>
+                    <textarea id="entry-content" placeholder="What's on your mind today?"></textarea>
+                </div>
+                <div class="button-group">
+                    <button id="save-entry-btn">Save Entry</button>
+                    <button id="delete-entry-btn" class="delete-btn" style="display: none;">Delete Entry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    
+  <script>
+    <!--Tab to edit-->
+    // Firebase Configuration
+// Replace these with your Firebase project's actual configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCTigDLHbq720I-MdSoJrTCWXVloE-XuJU",
+  authDomain: "ibrahim-diary-d7c7d.firebaseapp.com",
+  projectId: "ibrahim-diary-d7c7d",
+  storageBucket: "ibrahim-diary-d7c7d.firebasestorage.app",
+  messagingSenderId: "238421605124",
+  appId: "1:238421605124:web:8d0b8f994e25f46ec56e51",
+  measurementId: "G-35YLYF20GD"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// DOM Elements
+const loginSection = document.getElementById('login-section');
+const diarySection = document.getElementById('diary-section');
+const loginMessage = document.getElementById('login-message');
+const passwordInput = document.getElementById('password');
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const entriesContainer = document.getElementById('entries-container');
+const paginationContainer = document.getElementById('pagination-container');
+const emptyState = document.getElementById('empty-state');
+const searchInput = document.getElementById('search-input');
+const newEntryBtn = document.getElementById('new-entry-btn');
+const emptyNewEntryBtn = document.getElementById('empty-new-entry-btn');
+const entryModal = document.getElementById('entry-modal');
+const modalTitle = document.getElementById('modal-title');
+const entryIdInput = document.getElementById('entry-id');
+const entryTitleInput = document.getElementById('entry-title');
+const entryContentInput = document.getElementById('entry-content');
+const saveEntryBtn = document.getElementById('save-entry-btn');
+const deleteEntryBtn = document.getElementById('delete-entry-btn');
+const closeModal = document.querySelector('.close-modal');
+const monthSelect = document.getElementById('month-select');
+const yearSelect = document.getElementById('year-select');
+const jumpToDateBtn = document.getElementById('jump-to-date-btn');
+const calendarMonthYear = document.getElementById('calendar-month-year');
+const prevMonthBtn = document.getElementById('prev-month-btn');
+const nextMonthBtn = document.getElementById('next-month-btn');
+const todayBtn = document.getElementById('today-btn');
+const calendarGrid = document.querySelector('.calendar-grid');
+const viewSelectors = document.querySelectorAll('.view-option');
+const entriesView = document.getElementById('entries-view');
+const calendarView = document.getElementById('calendar-view');
+
+// Global variables
+let currentUser = null;
+let entries = [];
+let currentPage = 1;
+let totalPages = 1;
+let entriesPerPage = 9;
+let currentFilter = '';
+let currentCalendarDate = new Date();
+
+// Initial setup
+initializeYearSelect();
+setCurrentMonthAndYear();
+
+// Authentication
+loginBtn.addEventListener('click', handleLogin);
+logoutBtn.addEventListener('click', handleLogout);
+passwordInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleLogin();
+});
+
+// Entry Management
+newEntryBtn.addEventListener('click', () => openNewEntryModal());
+emptyNewEntryBtn.addEventListener('click', () => openNewEntryModal());
+saveEntryBtn.addEventListener('click', saveEntry);
+deleteEntryBtn.addEventListener('click', deleteEntry);
+closeModal.addEventListener('click', closeEntryModal);
+searchInput.addEventListener('input', () => {
+    currentFilter = searchInput.value.toLowerCase();
+    loadEntries();
+});
+
+// Calendar Navigation
+prevMonthBtn.addEventListener('click', () => navigateMonth(-1));
+nextMonthBtn.addEventListener('click', () => navigateMonth(1));
+todayBtn.addEventListener('click', goToToday);
+jumpToDateBtn.addEventListener('click', jumpToSelectedDate);
+
+// View Switching
+viewSelectors.forEach(selector => {
+    selector.addEventListener('click', () => switchView(selector.dataset.view));
+});
+
+// Handling clicks outside modal to close it
+window.addEventListener('click', (e) => {
+    if (e.target === entryModal) {
+        closeEntryModal();
+    }
+});
+
+// Check if user is already logged in
+checkAuthState();
+
+// Authentication Functions
+function handleLogin() {
+    const password = passwordInput.value;
+    
+    if (!password) {
+        showLoginMessage('Please enter your password', 'error');
+        return;
+    }
+    
+    // Using Firebase email/password auth with a fixed email
+    // You could replace this with a custom auth solution if needed
+    auth.signInWithEmailAndPassword('ibrahimmustafa787898@gmail.com', !h3y1brA7878q8@m)
+        .then((userCredential) => {
+            currentUser = userCredential.user;
+            showDiarySection();
+            loadEntries();
+        })
+        .catch((error) => {
+            console.error('Login error:', error);
+            showLoginMessage('Incorrect password. Please try again.', 'error');
+        });
+}
+
+function handleLogout() {
+    auth.signOut()
+        .then(() => {
+            currentUser = null;
+            showLoginSection();
+            passwordInput.value = '';
+        })
+        .catch((error) => {
+            console.error('Logout error:', error);
+        });
+}
+
+function checkAuthState() {
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentUser = user;
+            showDiarySection();
+            loadEntries();
+            renderCalendar();
+        } else {
+            currentUser = null;
+            showLoginSection();
+        }
+    });
+}
+
+function showLoginMessage(message, type) {
+    loginMessage.textContent = message;
+    loginMessage.className = `message ${type}`;
+    loginMessage.style.display = 'block';
+    
+    setTimeout(() => {
+        loginMessage.style.display = 'none';
+    }, 3000);
+}
+
+function showLoginSection() {
+    loginSection.style.display = 'block';
+    diarySection.style.display = 'none';
+    logoutBtn.style.display = 'none';
+}
+
+function showDiarySection() {
+    loginSection.style.display = 'none';
+    diarySection.style.display = 'block';
+    logoutBtn.style.display = 'block';
+}
+
+// Entry Management Functions
+function loadEntries() {
+    if (!currentUser) return;
+    
+    // Reference to the user's entries collection
+    const entriesRef = db.collection('users').doc(currentUser.uid).collection('entries');
+    
+    // Create a query
+    let query = entriesRef.orderBy('timestamp', 'desc');
+    
+    // Execute query
+    query.get()
+        .then((querySnapshot) => {
+            entries = [];
+            querySnapshot.forEach((doc) => {
+                const entry = {
+                    id: doc.id,
+                    ...doc.data()
+                };
+                entries.push(entry);
+            });
+            
+            // Filter entries if search is active
+            if (currentFilter) {
+                entries = entries.filter(entry => 
+                    entry.title.toLowerCase().includes(currentFilter) || 
+                    entry.content.toLowerCase().includes(currentFilter)
+                );
+            }
+            
+            // Update UI
+            updateEntriesUI();
+            renderCalendar(); // Update calendar to show which days have entries
+        })
+        .catch((error) => {
+            console.error('Error loading entries:', error);
+        });
+}
+
+function updateEntriesUI() {
+    // Calculate pagination
+    totalPages = Math.ceil(entries.length / entriesPerPage);
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages;
+    }
+    
+    // Show empty state or entries
+    if (entries.length === 0) {
+        entriesContainer.innerHTML = '';
+        paginationContainer.style.display = 'none';
+        emptyState.style.display = 'block';
+    } else {
+        emptyState.style.display = 'none';
+        
+        // Get current page entries
+        const startIndex = (currentPage - 1) * entriesPerPage;
+        const endIndex = startIndex + entriesPerPage;
+        const pageEntries = entries.slice(startIndex, endIndex);
+        
+        // Render entries
+        renderEntries(pageEntries);
+        
+        // Render pagination if needed
+        if (totalPages > 1) {
+            renderPagination();
+            paginationContainer.style.display = 'flex';
+        } else {
+            paginationContainer.style.display = 'none';
+        }
+    }
+}
+
+function renderEntries(pageEntries) {
+    entriesContainer.innerHTML = '';
+    
+    pageEntries.forEach((entry) => {
+        const entryCard = document.createElement('div');
+        entryCard.className = 'entry-card';
+        entryCard.dataset.id = entry.id;
+        
+        const entryDate = new Date(entry.timestamp.seconds * 1000);
+        const formattedDate = entryDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+        
+        entryCard.innerHTML = `
+            <div class="entry-header">
+                <div class="entry-title">${escapeHtml(entry.title)}</div>
+                <div class="entry-date">${formattedDate}</div>
+            </div>
+            <div class="entry-preview">${escapeHtml(entry.content)}</div>
+        `;
+        
+        entryCard.addEventListener('click', () => openEntryModal(entry));
+        entriesContainer.appendChild(entryCard);
+    });
+}
+
+function renderPagination() {
+    paginationContainer.innerHTML = '';
+    
+    // Previous button
+    const prevButton = document.createElement('button');
+    prevButton.className = `pagination-button ${currentPage === 1 ? 'disabled' : ''}`;
+    prevButton.textContent = 'Previous';
+    prevButton.disabled = currentPage === 1;
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updateEntriesUI();
+        }
+    });
+    paginationContainer.appendChild(prevButton);
+    
+    // Page info
+    const pageInfo = document.createElement('div');
+    pageInfo.className = 'pagination-info';
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    paginationContainer.appendChild(pageInfo);
+    
+    // Next button
+    const nextButton = document.createElement('button');
+    nextButton.className = `pagination-button ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextButton.textContent = 'Next';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updateEntriesUI();
+        }
+    });
+    paginationContainer.appendChild(nextButton);
+}
+
+function openNewEntryModal() {
+    modalTitle.textContent = 'New Diary Entry';
+    entryIdInput.value = '';
+    entryTitleInput.value = '';
+    entryContentInput.value = '';
+    deleteEntryBtn.style.display = 'none';
+    entryModal.style.display = 'flex';
+    entryTitleInput.focus();
+}
+
+function openEntryModal(entry) {
+    modalTitle.textContent = 'Edit Diary Entry';
+    entryIdInput.value = entry.id;
+    entryTitleInput.value = entry.title;
+    entryContentInput.value = entry.content;
+    deleteEntryBtn.style.display = 'block';
+    entryModal.style.display = 'flex';
+    entryTitleInput.focus();
+}
+
+function closeEntryModal() {
+    entryModal.style.display = 'none';
+}
+
+function saveEntry() {
+    if (!currentUser) return;
+    
+    const entryId = entryIdInput.value;
+    const title = entryTitleInput.value.trim();
+    const content = entryContentInput.value.trim();
+    
+    if (!title) {
+        alert('Please enter a title for your entry');
+        return;
+    }
+    
+    const entryData = {
+        title,
+        content,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    const userEntriesRef = db.collection('users').doc(currentUser.uid).collection('entries');
+    
+    if (entryId) {
+        // Update existing entry
+        userEntriesRef.doc(entryId).update(entryData)
+            .then(() => {
+                closeEntryModal();
+                loadEntries();
+            })
+            .catch((error) => {
+                console.error('Error updating entry:', error);
+                alert('Failed to update entry. Please try again.');
+            });
+    } else {
+        // Create new entry
+        userEntriesRef.add(entryData)
+            .then(() => {
+                closeEntryModal();
+                loadEntries();
+            })
+            .catch((error) => {
+                console.error('Error adding entry:', error);
+                alert('Failed to save entry. Please try again.');
+            });
+    }
+}
+
+function deleteEntry() {
+    if (!currentUser) return;
+    
+    const entryId = entryIdInput.value;
+    
+    if (!entryId) return;
+    
+    if (confirm('Are you sure you want to delete this entry? This action cannot be undone.')) {
+        db.collection('users').doc(currentUser.uid).collection('entries').doc(entryId).delete()
+            .then(() => {
+                closeEntryModal();
+                loadEntries();
+            })
+            .catch((error) => {
+                console.error('Error deleting entry:', error);
+                alert('Failed to delete entry. Please try again.');
+            });
+    }
+}
+
+// Calendar Functions
+function initializeYearSelect() {
+    const currentYear = new Date().getFullYear();
+    yearSelect.innerHTML = '';
+    
+    // Add years from 5 years ago to 5 years in future
+    for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+    
+    yearSelect.value = currentYear;
+}
+
+function setCurrentMonthAndYear() {
+    const currentDate = new Date();
+    monthSelect.value = currentDate.getMonth();
+    yearSelect.value = currentDate.getFullYear();
+}
+
+function renderCalendar() {
+    // Update month-year display
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June', 
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const month = currentCalendarDate.getMonth();
+    const year = currentCalendarDate.getFullYear();
+    
+    calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
+    
+    // Set select values to match current calendar view
+    monthSelect.value = month;
+    yearSelect.value = year;
+    
+    // Clear existing days
+    const dayElements = calendarGrid.querySelectorAll('.calendar-day');
+    dayElements.forEach(el => el.remove());
+    
+    // Get first day of month and last day of month
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Get day of week for first day (0 = Sunday)
+    const firstDayOfWeek = firstDay.getDay();
+    
+    // Create array of dates to display
+    const dates = [];
+    
+    // Add days from previous month
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        dates.push({
+            date: new Date(year, month - 1, prevMonthLastDay - i),
+            isCurrentMonth: false
+        });
+    }
+    
+    // Add days from current month
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+        dates.push({
+            date: new Date(year, month, i),
+            isCurrentMonth: true
+        });
+    }
+    
+    // Add days from next month
+    const remainingCells = 42 - dates.length; // 6 rows × 7 days = 42 cells
+    for (let i = 1; i <= remainingCells; i++) {
+        dates.push({
+            date: new Date(year, month + 1, i),
+            isCurrentMonth: false
+        });
+    }
+    
+    // Find days with entries
+    const daysWithEntries = new Set();
+    if (entries.length > 0) {
+        entries.forEach(entry => {
+            if (entry.timestamp) {
+                const entryDate = new Date(entry.timestamp.seconds * 1000);
+                const dateKey = `${entryDate.getFullYear()}-${entryDate.getMonth()}-${entryDate.getDate()}`;
+                daysWithEntries.add(dateKey);
+            }
+        });
+    }
+    
+    // Render calendar days
+    dates.forEach(({ date, isCurrentMonth }) => {
+        const today = new Date();
+        const isToday = date.getDate() === today.getDate() && 
+                        date.getMonth() === today.getMonth() && 
+                        date.getFullYear() === today.getFullYear();
+        
+        const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        const hasEntries = daysWithEntries.has(dateKey);
+        
+        const dayElement = document.createElement('div');
+        dayElement.className = `calendar-day ${isCurrentMonth ? '' : 'other-month'} ${isToday ? 'active' : ''} ${hasEntries ? 'has-entries' : ''}`;
+        dayElement.textContent = date.getDate();
+        dayElement.dataset.date = date.toISOString();
+        
+        dayElement.addEventListener('click', () => {
+            if (hasEntries) {
+                // Filter entries for this day
+                filterEntriesByDate(date);
+            }
+        });
+        
+        calendarGrid.appendChild(dayElement);
+    });
+}
+
+function navigateMonth(direction) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+    renderCalendar();
+}
+
+function goToToday() {
+    currentCalendarDate = new Date();
+    renderCalendar();
+}
+
+function jumpToSelectedDate() {
+    const selectedMonth = parseInt(monthSelect.value);
+    const selectedYear = parseInt(yearSelect.value);
+    
+    currentCalendarDate = new Date(selectedYear, selectedMonth, 1);
+    renderCalendar();
+}
+
+function filterEntriesByDate(date) {
+    if (!entries.length) return;
+    
+    // Clear search input
+    searchInput.value = '';
+    
+    // Create date range for the selected day
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+    
+    // Filter entries
+    const filteredEntries = entries.filter(entry => {
+        if (!entry.timestamp) return false;
+        
+        const entryDate = new Date(entry.timestamp.seconds * 1000);
+        return entryDate >= startDate && entryDate <= endDate;
+    });
+    
+    // Switch to entries view if we're not already there
+    switchView('entries');
+    
+    // Update UI to show filtered entries
+    const formattedDate = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    if (filteredEntries.length > 0) {
+        renderEntries(filteredEntries);
+        paginationContainer.style.display = 'none';
+        emptyState.style.display = 'none';
+    } else {
+        entriesContainer.innerHTML = `<div class="empty-state"><p>No entries found for ${formattedDate}</p></div>`;
+        paginationContainer.style.display = 'none';
+        emptyState.style.display = 'none';
+    }
+}
+
+function switchView(view) {
+    viewSelectors.forEach(selector => {
+        if (selector.dataset.view === view) {
+            selector.classList.add('active');
+        } else {
+            selector.classList.remove('active');
+        }
+    });
+    
+    if (view === 'calendar') {
+        entriesView.style.display = 'none';
+        calendarView.style.display = 'block';
+        renderCalendar();
+    } else {
+        entriesView.style.display = 'block';
+        calendarView.style.display = 'none';
+        loadEntries();
+    }
+}
+
+// Utility Functions
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+  </script>
+</body>
+</html>
