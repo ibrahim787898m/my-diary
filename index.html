@@ -948,16 +948,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Calendar view
     function toggleCalendar() {
-        const isHidden = calendarWidget.style.display === 'none' || !calendarWidget.style.display;
-        
-        if (isHidden) {
-            showView(calendarWidget);
-            toggleCalendarBtn.textContent = 'Hide Calendar';
-            renderCalendar();
-        } else {
-            hideView(calendarWidget);
-            toggleCalendarBtn.textContent = 'Show Calendar';
-        }
+    if (calendarWidget.style.display === 'block') {
+        calendarWidget.style.display = 'none';
+        toggleCalendarBtn.textContent = 'Show Calendar';
+    } else {
+        calendarWidget.style.display = 'block';
+        toggleCalendarBtn.textContent = 'Hide Calendar';
+        renderCalendar();
+    }
     }
 
     function renderCalendar() {
