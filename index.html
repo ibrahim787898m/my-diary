@@ -768,13 +768,11 @@ function loadEntries() {
         });
             }
 
-
         // Pagination Variables
 let currentPage = 1;
 const entriesPerPage = 5;
 let lastVisible = null;
 let firstVisible = null;
-let isFirstLoad = true;
 let totalEntries = 0;
 
 // Get pagination controls
@@ -782,17 +780,16 @@ const prevPageBtn = document.getElementById('prev-page-btn');
 const nextPageBtn = document.getElementById('next-page-btn');
 const pageInfo = document.getElementById('page-info');
 
-// Load total number of entries to control navigation
+// Load total number of entries (for pagination)
 db.collection('diary_entries').get().then(snapshot => {
     totalEntries = snapshot.size;
     updatePaginationButtons();
 });
 
-// Load Entries with Pagination
+// Function to Load Entries with Pagination
 function loadEntries(direction = "next") {
-    if (!isFirstLoad) {
-        entriesContainer.innerHTML = ''; // Clear entries only if it's not the first load
-    }
+    // Clear existing entries before fetching new ones
+    entriesContainer.innerHTML = '';
 
     let query = db.collection('diary_entries')
         .orderBy('createdAt', 'desc')
@@ -810,13 +807,9 @@ function loadEntries(direction = "next") {
             return;
         }
 
+        // Track first and last visible entry for pagination
         firstVisible = snapshot.docs[0];
         lastVisible = snapshot.docs[snapshot.docs.length - 1];
-
-        if (isFirstLoad) {
-            entriesContainer.innerHTML = ''; // Ensure it's fully cleared on first load
-            isFirstLoad = false;
-        }
 
         snapshot.forEach(doc => {
             createEntryCard(doc.id, doc.data());
@@ -854,10 +847,12 @@ nextPageBtn.addEventListener('click', () => {
     loadEntries("next");
 });
 
-// Initial Load
+// Ensure entries load correctly on page refresh
 window.onload = () => {
+    currentPage = 1;  // Reset to first page on reload
     loadEntries();
 };
+
         
         // IMPORTANT: Uncomment the line below ONCE to create your account
         // Then comment it out again for security
