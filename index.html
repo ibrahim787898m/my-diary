@@ -634,20 +634,33 @@ const firebaseConfig = {
         });
         
         // Load Entries
-        function loadEntries() {
-            const searchTerm = searchInput.value.toLowerCase();
-            entriesContainer.innerHTML = '';
-            
-            db.collection('diary_entries')
-                .orderBy('createdAt', 'desc')
-                .get()
-                .then(snapshot => {
-                    if (snapshot.empty) {
-                        entriesContainer.style.display = 'none';
-                        paginationContainer.style.display = 'none';
-                        emptyState.style.display = 'block';
-                        return;
+        document.getElementById('calendar-picker').addEventListener('change', (event) => {
+    const selectedDate = event.target.value; // Format: YYYY-MM-DD
+    if (!selectedDate) return loadEntries(); // Load all if no date is selected
+
+    entriesContainer.innerHTML = '';
+
+    db.collection('diary_entries')
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then(snapshot => {
+            let filteredEntries = [];
+            snapshot.forEach(doc => {
+                const entry = doc.data();
+                entry.id = doc.id;
+
+                if (entry.createdAt) {
+                    const entryDate = entry.createdAt.toDate().toISOString().split('T')[0]; // Format YYYY-MM-DD
+                    if (entryDate === selectedDate) {
+                        filteredEntries.push(entry);
                     }
+                }
+            });
+
+            displayEntries(filteredEntries);
+        })
+        .catch(error => console.error("Error loading entries:", error));
+});
                     
                     // Store all entries for client-side pagination and filtering
                     allEntries = [];
