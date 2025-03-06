@@ -771,20 +771,28 @@ function loadEntries() {
         // Pagination Variables
 let currentPage = 1;
 const entriesPerPage = 5;
-let totalEntries = 0;
 let lastVisible = null;
 let firstVisible = null;
+let totalEntries = 0;
 
 // Get pagination controls
 const prevPageBtn = document.getElementById('prev-page-btn');
 const nextPageBtn = document.getElementById('next-page-btn');
 const pageInfo = document.getElementById('page-info');
 
-// Function to Load Entries with Pagination
-function loadEntries(direction = "next") {
-    entriesContainer.innerHTML = '';
+// Load total entries count (for navigation)
+db.collection('diary_entries').get().then(snapshot => {
+    totalEntries = snapshot.size;
+    updatePaginationButtons();
+});
 
-    let query = db.collection('diary_entries').orderBy('createdAt', 'desc').limit(entriesPerPage);
+// Load Entries with Pagination
+function loadEntries(direction = "next") {
+    entriesContainer.innerHTML = ''; // Clear previous entries
+
+    let query = db.collection('diary_entries')
+        .orderBy('createdAt', 'desc')
+        .limit(entriesPerPage);
 
     if (direction === "next" && lastVisible) {
         query = query.startAfter(lastVisible);
@@ -794,12 +802,10 @@ function loadEntries(direction = "next") {
 
     query.get().then(snapshot => {
         if (snapshot.empty) {
-            if (direction === "next") nextPageBtn.disabled = true;
-            if (direction === "prev") prevPageBtn.disabled = true;
+            nextPageBtn.disabled = true;
             return;
         }
 
-        // Track first and last visible entry for pagination
         firstVisible = snapshot.docs[0];
         lastVisible = snapshot.docs[snapshot.docs.length - 1];
 
@@ -807,12 +813,7 @@ function loadEntries(direction = "next") {
             createEntryCard(doc.id, doc.data());
         });
 
-        // Enable/Disable pagination buttons
-        prevPageBtn.disabled = currentPage === 1;
-        nextPageBtn.disabled = snapshot.docs.length < entriesPerPage;
-
-        // Update page info
-        pageInfo.textContent = `Page ${currentPage}`;
+        updatePaginationButtons();
     }).catch(error => {
         console.error("Error loading entries:", error);
         entriesContainer.innerHTML = `
@@ -823,7 +824,14 @@ function loadEntries(direction = "next") {
     });
 }
 
-// Pagination Button Events
+// Update Pagination Buttons
+function updatePaginationButtons() {
+    prevPageBtn.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage * entriesPerPage >= totalEntries;
+    pageInfo.textContent = `Page ${currentPage}`;
+}
+
+// Handle Previous Page
 prevPageBtn.addEventListener('click', () => {
     if (currentPage > 1) {
         currentPage--;
@@ -831,6 +839,7 @@ prevPageBtn.addEventListener('click', () => {
     }
 });
 
+// Handle Next Page
 nextPageBtn.addEventListener('click', () => {
     currentPage++;
     loadEntries("next");
