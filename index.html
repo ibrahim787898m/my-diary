@@ -1002,6 +1002,240 @@ async function deleteEntry() {
 }
 
 // Search and Filter Functions
+
+
+
+        // Function to populate days in the day filter dropdown
+function populateDayFilter() {
+    const year = filterYear.value !== 'all' ? parseInt(filterYear.value) : currentDate.getFullYear();
+    const month = filterMonth.value !== 'all' ? parseInt(filterMonth.value) : currentDate.getMonth();
+    
+    // Clear existing options except "All Days"
+    while (filterDay.options.length > 1) {
+        filterDay.remove(1);
+    }
+    
+    // If both year and month are selected, populate days
+    if (filterYear.value !== 'all' && filterMonth.value !== 'all') {
+        // Get number of days in the selected month
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // Add day options
+        for (let i = 1; i <= daysInMonth; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            filterDay.appendChild(option);
+        }
+    }
+}
+
+// Function to set up the year filter with appropriate years
+function setupYearFilter() {
+    // Clear existing options
+    filterYear.innerHTML = '<option value="all">All Years</option>';
+    
+    // Get current year
+    const currentYear = new Date().getFullYear();
+    
+    // Add 5 years before and after current year
+    for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        
+        // Set current year as selected
+        if (year === currentYear) {
+            option.selected = true;
+        }
+        
+        filterYear.appendChild(option);
+    }
+}
+
+// Function to set current month in filter
+function setCurrentMonthInFilter() {
+    filterMonth.value = currentDate.getMonth();
+    populateDayFilter(); // Populate days after setting month
+}
+
+// Update the existing event listeners section to include these changes
+filterYear.addEventListener('change', function() {
+    handleFilterChange();
+    populateDayFilter(); // Repopulate days when year changes
+});
+
+filterMonth.addEventListener('change', function() {
+    handleFilterChange();
+    populateDayFilter(); // Repopulate days when month changes
+});
+
+// Function to switch between calendar and list views
+function switchView(view) {
+    currentView = view;
+    
+    if (view === 'calendar') {
+        calendarViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+        document.querySelector('.calendar-navigation').style.display = 'block';
+        renderCalendar();
+    } else {
+        calendarViewBtn.classList.remove('active');
+        listViewBtn.classList.add('active');
+        document.querySelector('.calendar-navigation').style.display = 'block';
+        renderEntries();
+    }
+}
+
+// Function to clear the calendar
+function clearCalendar() {
+    calendarDays.innerHTML = '';
+}
+
+// Function to highlight days with entries
+function highlightDaysWithEntries() {
+    // Only apply if calendar view is active
+    if (currentView !== 'calendar') return;
+    
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Get all day cells
+    const dayCells = document.querySelectorAll('.calendar-day:not(.empty)');
+    
+    // Remove any existing has-entries classes
+    dayCells.forEach(cell => {
+        cell.classList.remove('has-entries');
+    });
+    
+    // Create a set of days that have entries
+    const daysWithEntries = new Set();
+    
+    filteredEntries.forEach(entry => {
+        const entryDate = entry.timestamp;
+        
+        // Check if the entry is in the current month and year
+        if (entryDate.getFullYear() === year && entryDate.getMonth() === month) {
+            daysWithEntries.add(entryDate.getDate());
+        }
+    });
+    
+    // Highlight days with entries
+    dayCells.forEach(cell => {
+        const day = parseInt(cell.textContent);
+        if (daysWithEntries.has(day)) {
+            cell.classList.add('has-entries');
+        }
+    });
+}
+
+// Function to update calendar title
+function updateCalendarTitle() {
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    calendarTitle.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+}
+
+// Navigation functions
+function goToPreviousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    updateCalendarTitle();
+    renderCalendar();
+    
+    // Update month in filter to match calendar
+    filterMonth.value = currentDate.getMonth();
+    populateDayFilter();
+}
+
+function goToNextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    updateCalendarTitle();
+    renderCalendar();
+    
+    // Update month in filter to match calendar
+    filterMonth.value = currentDate.getMonth();
+    populateDayFilter();
+}
+
+function goToToday() {
+    currentDate = new Date();
+    updateCalendarTitle();
+    renderCalendar();
+    
+    // Update filters to match today's date
+    filterYear.value = currentDate.getFullYear();
+    filterMonth.value = currentDate.getMonth();
+    populateDayFilter();
+}
+
+// Helper function to format date
+function formatDate(date) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
+
+// Helper function to escape HTML
+function escapeHTML(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// Helper functions for UI
+function showEmptyState() {
+    entriesContainer.style.display = 'none';
+    paginationControls.style.display = 'none';
+    emptyState.style.display = 'block';
+}
+
+function hideEmptyState() {
+    entriesContainer.style.display = 'grid';
+    emptyState.style.display = 'none';
+}
+
+function showMessage(element, message, type) {
+    element.textContent = message;
+    element.className = `message ${type}`;
+    element.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        element.style.display = 'none';
+    }, 5000);
+}
+
+// Initialize calendar when entries are loaded
+document.addEventListener('DOMContentLoaded', () => {
+    setupYearFilter();
+    setCurrentMonthInFilter();
+    updateCalendarTitle();
+    renderCalendar();
+    
+    // Check for user auth state
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            loginSection.style.display = 'none';
+            diarySection.style.display = 'block';
+            logoutBtn.style.display = 'block';
+            loadEntries();
+        } else {
+            currentUser = null;
+            loginSection.style.display = 'block';
+            diarySection.style.display = 'none';
+            logoutBtn.style.display = 'none';
+        }
+    });
+});
+
+
+        
 function handleSearch() {
     const searchTerm = searchInput.value.trim().toLowerCase();
     
@@ -1133,30 +1367,6 @@ function clearAllFilters() {
         renderEntries();
     } else {
         highlightDaysWithEntries();
-    }
-}
-
-function populateDayFilter() {
-    const year = filterYear.value !== 'all' ? parseInt(filterYear.value) : currentDate.getFullYear();
-    const month = filterMonth.value !== 'all' ? parseInt(filterMonth.value) : currentDate.getMonth();
-    
-    // Clear existing options except "All Days"
-    while (filterDay.options.length > 1) {
-        filterDay.remove(1);
-    }
-    
-    // If both year and month are selected, populate days
-    if (filterYear.value !== 'all' && filterMonth.value !== 'all') {
-        // Get number of days in the selected month
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
-        // Add day options
-        for (let i = 1; i <= daysInMonth; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = i;
-            filterDay.appendChild(option);
-        }
     }
 }
 
