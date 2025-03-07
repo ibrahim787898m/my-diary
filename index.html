@@ -1136,6 +1136,30 @@ function clearAllFilters() {
     }
 }
 
+function populateDayFilter() {
+    const year = filterYear.value !== 'all' ? parseInt(filterYear.value) : currentDate.getFullYear();
+    const month = filterMonth.value !== 'all' ? parseInt(filterMonth.value) : currentDate.getMonth();
+    
+    // Clear existing options except "All Days"
+    while (filterDay.options.length > 1) {
+        filterDay.remove(1);
+    }
+    
+    // If both year and month are selected, populate days
+    if (filterYear.value !== 'all' && filterMonth.value !== 'all') {
+        // Get number of days in the selected month
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // Add day options
+        for (let i = 1; i <= daysInMonth; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            filterDay.appendChild(option);
+        }
+    }
+}
+
 function applyDateFilters() {
     const yearFilter = activeFiltersMap.get('year');
     const monthFilter = activeFiltersMap.get('month');
