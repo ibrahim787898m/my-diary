@@ -285,6 +285,40 @@
             background-color: #dc2626;
         }
 
+        .pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.pagination-btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.pagination-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.pagination-btn:disabled {
+    background-color: var(--text-light);
+    cursor: not-allowed;
+}
+
+#page-info {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -355,6 +389,14 @@
                 <p>Your diary is empty. Create your first entry to get started.</p>
                 <button class="new-entry-btn" id="empty-new-entry-btn">Create First Entry</button>
             </div>
+
+                <!-- Pagination Container -->
+    <div id="pagination-container" class="pagination-container">
+        <button id="prev-page-btn" class="pagination-btn">Previous</button>
+        <span id="page-info"></span>
+        <button id="next-page-btn" class="pagination-btn">Next</button>
+    </div>
+        </div>
         </div>
 
         <!-- Entry Modal -->
@@ -696,6 +738,105 @@ const firebaseConfig = {
                     }
                 });
         }
+
+
+        // Pagination Variables
+let currentPage = 1;
+const entriesPerPage = 5; // Number of entries per page
+
+// DOM Elements for Pagination
+const prevPageBtn = document.getElementById('prev-page-btn');
+const nextPageBtn = document.getElementById('next-page-btn');
+const pageInfo = document.getElementById('page-info');
+
+// Load Entries with Pagination
+function loadEntries() {
+    const searchTerm = searchInput.value.toLowerCase();
+    entriesContainer.innerHTML = '';
+
+    db.collection('diary_entries')
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                entriesContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+                paginationContainer.style.display = 'none';
+                return;
+            }
+
+            entriesContainer.style.display = 'grid';
+            emptyState.style.display = 'none';
+            paginationContainer.style.display = 'flex';
+
+            const totalEntries = snapshot.size;
+            const totalPages = Math.ceil(totalEntries / entriesPerPage);
+
+            // Update Pagination Buttons
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+            let hasVisibleEntries = false;
+            let entryCount = 0;
+
+            snapshot.forEach(doc => {
+                const entry = doc.data();
+                const entryId = doc.id;
+
+                // If search term exists, filter entries
+                if (searchTerm && 
+                    !entry.title.toLowerCase().includes(searchTerm) && 
+                    !entry.content.toLowerCase().includes(searchTerm)) {
+                    return;
+                }
+
+                entryCount++;
+
+                // Only show entries for the current page
+                if (entryCount > (currentPage - 1) * entriesPerPage && entryCount <= currentPage * entriesPerPage) {
+                    hasVisibleEntries = true;
+                    createEntryCard(entryId, entry);
+                }
+            });
+
+            // If no entries match search
+            if (!hasVisibleEntries && searchTerm) {
+                entriesContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; color: var(--text-light); padding: 30px;">
+                        No entries match your search for "${searchTerm}"
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error("Error loading entries:", error);
+            entriesContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; color: var(--error); padding: 30px;">
+                    Error loading entries. Please try refreshing the page.
+                </div>
+            `;
+        });
+}
+
+// Pagination Button Event Listeners
+prevPageBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        loadEntries();
+    }
+});
+
+nextPageBtn.addEventListener('click', () => {
+    currentPage++;
+    loadEntries();
+});
+
+// Reset to first page when searching
+searchInput.addEventListener('input', () => {
+    currentPage = 1;
+    loadEntries();
+});
         
         // IMPORTANT: Uncomment the line below ONCE to create your account
         // Then comment it out again for security
