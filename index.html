@@ -950,15 +950,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // Calendar view functions
-function toggleCalendar() {
-    const isHidden = calendarWidget.style.display === 'none' || !calendarWidget.style.display;
+
+
+    function toggleCalendar() {
+    const isHidden = calendarWidget.style.display === 'none' || calendarWidget.style.display === '';
     
     if (isHidden) {
-        showView(calendarWidget);
+        calendarWidget.style.display = 'block'; // Explicitly set to block instead of empty string
         toggleCalendarBtn.textContent = 'Hide Calendar';
+        // Make sure we render the calendar with current date
+        currentCalendarDate = new Date(); // Reset to current date when showing
         renderCalendar();
     } else {
-        hideView(calendarWidget);
+        calendarWidget.style.display = 'none';
         toggleCalendarBtn.textContent = 'Show Calendar';
     }
 }
@@ -972,6 +976,46 @@ function renderCalendar() {
         month: 'long',
         year: 'numeric'
     });
+    
+    // Get first day of month and total days
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // Get days from previous month
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
+    // Clear calendar
+    calendarDays.innerHTML = '';
+    
+    // Fill previous month days
+    for (let i = 0; i < firstDay; i++) {
+        const day = daysInPrevMonth - firstDay + i + 1;
+        const prevMonth = new Date(year, month - 1, day);
+        addCalendarDay(day, 'other-month', prevMonth);
+    }
+    
+    // Current month days
+    const today = new Date();
+    for (let i = 1; i <= daysInMonth; i++) {
+        const date = new Date(year, month, i);
+        const isToday = 
+            today.getDate() === i && 
+            today.getMonth() === month && 
+            today.getFullYear() === year;
+        
+        const classes = [];
+        if (isToday) classes.push('today');
+        
+        addCalendarDay(i, classes.join(' '), date);
+    }
+    
+    // Next month days
+    const remainingCells = 42 - (firstDay + daysInMonth); // 6 rows x 7 days
+    for (let i = 1; i <= remainingCells; i++) {
+        const nextMonth = new Date(year, month + 1, i);
+        addCalendarDay(i, 'other-month', nextMonth);
+    }
+}
     
     // Get first day of month and total days
     const firstDay = new Date(year, month, 1).getDay();
