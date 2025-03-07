@@ -472,15 +472,17 @@
       
       
       // Firebase configuration - you need to replace these with your actual Firebase project details
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCAs3a6ncfNjiZXOcDOa0uP718K30907OA",
+  authDomain: "ibrahim-diary-5ae52.firebaseapp.com",
+  projectId: "ibrahim-diary-5ae52",
+  storageBucket: "ibrahim-diary-5ae52.firebasestorage.app",
+  messagingSenderId: "104035124798",
+  appId: "1:104035124798:web:4a31de725491f9f5dc736f",
+  measurementId: "G-G0B342N4NE"
 };
-
+        
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -541,7 +543,7 @@ loginBtn.addEventListener('click', () => {
 function signInWithPassword(password) {
   // In a real app, you should use Firebase Authentication properly
   // This is just a simple demo - the password should be stored securely, not hardcoded
-  const correctPassword = "mydiarypassword"; // Change this to your desired password
+  const correctPassword = "ibrahim787898"; // Change this to your desired password
   
   if (password === correctPassword) {
     // Sign in anonymously for Firebase permissions
