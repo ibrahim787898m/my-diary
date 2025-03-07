@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal Diary</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #eff6ff;
+            --background: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .login-container, .diary-entry {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin: auto;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #logout-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 500;
+            width: auto;
+            padding: 5px 10px;
+        }
+
+        #logout-btn:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        .success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .diary-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: 250px;
+            font-size: 0.95rem;
+        }
+
+        .new-entry-btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .new-entry-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .entries-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .entry-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .entry-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .entry-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        .entry-date {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .entry-preview {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            flex-grow: 1;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            width: auto;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .delete-btn {
+            background-color: var(--error);
+        }
+
+        .delete-btn:hover {
+            background-color: #dc2626;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .diary-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .entries-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            margin: 50px auto;
+            color: var(--text-light);
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>My Personal Diary</h1>
+            <button id="logout-btn" style="display: none;">Logout</button>
+        </header>
+
+        <!-- Login Section -->
+        <div id="login-section">
+            <div class="login-container">
+                <h2 class="form-title">Access Your Diary</h2>
+                <div id="login-message" class="message"></div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+                <button id="login-btn">Unlock Diary</button>
+            </div>
+        </div>
+
+        <!-- Diary Section -->
+        <div id="diary-section" style="display: none;">
+            <div class="diary-controls">
+                <input type="text" id="search-input" class="search-box" placeholder="Search entries...">
+                <button class="new-entry-btn" id="new-entry-btn">New Entry</button>
+            </div>
+
+            <div id="entries-container" class="entries-list">
+                <!-- Entries will be dynamically added here -->
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <p>Your diary is empty. Create your first entry to get started.</p>
+                <button class="new-entry-btn" id="empty-new-entry-btn">Create First Entry</button>
+            </div>
+        </div>
+
+        <!-- Entry Modal -->
+        <div id="entry-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal">&times;</button>
+                <h3 id="modal-title" class="form-title">New Diary Entry</h3>
+                
+                <input type="hidden" id="entry-id">
+                <div class="form-group">
+                    <label for="entry-title">Title</label>
+                    <input type="text" id="entry-title" placeholder="Name your entry">
+                </div>
+                <div class="form-group">
+                    <label for="entry-content">Content</label>
+                    <textarea id="entry-content" placeholder="What's on your mind today?"></textarea>
+                </div>
+                <div class="button-group">
+                    <button id="save-entry-btn">Save Entry</button>
+                    <button id="delete-entry-btn" class="delete-btn" style="display: none;">Delete Entry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // User account details - replace with your own email
+        const DIARY_EMAIL = "your-email@example.com"; // Replace with your actual email
+        // Do not change this password in the code - set it once when creating your account in Firebase
+        const DIARY_PASSWORD = "your-secret-password"; // This is only used for initial account setup
+        
+        // DOM Elements
+        const loginSection = document.getElementById('login-section');
+        const diarySection = document.getElementById('diary-section');
+        const entryModal = document.getElementById('entry-modal');
+        const entriesContainer = document.getElementById('entries-container');
+        const emptyState = document.getElementById('empty-state');
+        const logoutBtn = document.getElementById('logout-btn');
+        const loginMessage = document.getElementById('login-message');
+        const passwordInput = document.getElementById('password');
+        const searchInput = document.getElementById('search-input');
+        
+        // Entry Modal Elements
+        const modalTitle = document.getElementById('modal-title');
+        const entryIdInput = document.getElementById('entry-id');
+        const entryTitleInput = document.getElementById('entry-title');
+        const entryContentInput = document.getElementById('entry-content');
+        const saveEntryBtn = document.getElementById('save-entry-btn');
+        const deleteEntryBtn = document.getElementById('delete-entry-btn');
+        
+        // Auth State Changes
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // Only allow access if the user's email matches our predefined email
+                if (user.email === DIARY_EMAIL) {
+                    loginSection.style.display = 'none';
+                    diarySection.style.display = 'block';
+                    logoutBtn.style.display = 'block';
+                    loadEntries();
+                } else {
+                    // If someone else somehow logged in, log them out
+                    showMessage(loginMessage, "Unauthorized access.", "error");
+                    auth.signOut();
+                }
+            } else {
+                // User is signed out
+                loginSection.style.display = 'block';
+                diarySection.style.display = 'none';
+                logoutBtn.style.display = 'none';
+            }
+        });
+        
+        // Login with password
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const password = passwordInput.value;
+            
+            if (!password) {
+                showMessage(loginMessage, "Please enter your password.", "error");
+                return;
+            }
+            
+            // Use the predefined email with the entered password
+            auth.signInWithEmailAndPassword(DIARY_EMAIL, password)
+                .then(() => {
+                    passwordInput.value = '';
+                    hideMessage(loginMessage);
+                })
+                .catch(error => {
+                    console.error("Login error:", error);
+                    showMessage(loginMessage, "Incorrect password. Please try again.", "error");
+                });
+        });
+        
+        // Also allow Enter key to login
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('login-btn').click();
+            }
+        });
+        
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+        
+        // New Entry Button
+        document.getElementById('new-entry-btn').addEventListener('click', openNewEntryModal);
+        document.getElementById('empty-new-entry-btn').addEventListener('click', openNewEntryModal);
+        
+        function openNewEntryModal() {
+            modalTitle.textContent = "New Diary Entry";
+            entryIdInput.value = '';
+            entryTitleInput.value = '';
+            entryContentInput.value = '';
+            deleteEntryBtn.style.display = 'none';
+            entryModal.style.display = 'flex';
+            entryTitleInput.focus();
+        }
+        
+        // Close Modal
+        document.querySelector('.close-modal').addEventListener('click', () => {
+            entryModal.style.display = 'none';
+        });
+        
+        // Close Modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === entryModal) {
+                entryModal.style.display = 'none';
+            }
+        });
+        
+        // Save Entry
+        saveEntryBtn.addEventListener('click', () => {
+            const title = entryTitleInput.value.trim();
+            const content = entryContentInput.value.trim();
+            const entryId = entryIdInput.value;
+            
+            if (!title) {
+                alert('Please enter a title for your entry');
+                entryTitleInput.focus();
+                return;
+            }
+            
+            if (!content) {
+                alert('Please write some content for your entry');
+                entryContentInput.focus();
+                return;
+            }
+            
+            const entryData = {
+                title,
+                content,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            let savePromise;
+            
+            if (entryId) {
+                // Update existing entry
+                savePromise = db.collection('diary_entries').doc(entryId).update(entryData);
+            } else {
+                // Create new entry
+                entryData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                savePromise = db.collection('diary_entries').add(entryData);
+            }
+            
+            savePromise
+                .then(() => {
+                    entryModal.style.display = 'none';
+                    loadEntries();
+                })
+                .catch(error => {
+                    console.error("Error saving entry:", error);
+                    alert(`Error saving entry: ${error.message}`);
+                });
+        });
+        
+        // Delete Entry
+        deleteEntryBtn.addEventListener('click', () => {
+            const entryId = entryIdInput.value;
+            
+            if (!entryId) return;
+            
+            if (confirm('Are you sure you want to delete this entry? This cannot be undone.')) {
+                db.collection('diary_entries').doc(entryId).delete()
+                    .then(() => {
+                        entryModal.style.display = 'none';
+                        loadEntries();
+                    })
+                    .catch(error => {
+                        console.error("Error deleting entry:", error);
+                        alert(`Error deleting entry: ${error.message}`);
+                    });
+            }
+        });
+        
+        // Load Entries
+        function loadEntries() {
+            const searchTerm = searchInput.value.toLowerCase();
+            entriesContainer.innerHTML = '';
+            
+            db.collection('diary_entries')
+                .orderBy('createdAt', 'desc')
+                .get()
+                .then(snapshot => {
+                    if (snapshot.empty) {
+                        entriesContainer.style.display = 'none';
+                        emptyState.style.display = 'block';
+                        return;
+                    }
+                    
+                    entriesContainer.style.display = 'grid';
+                    emptyState.style.display = 'none';
+                    
+                    let hasVisibleEntries = false;
+                    
+                    snapshot.forEach(doc => {
+                        const entry = doc.data();
+                        const entryId = doc.id;
+                        
+                        // If search term exists, filter entries
+                        if (searchTerm && 
+                            !entry.title.toLowerCase().includes(searchTerm) && 
+                            !entry.content.toLowerCase().includes(searchTerm)) {
+                            return;
+                        }
+                        
+                        hasVisibleEntries = true;
+                        createEntryCard(entryId, entry);
+                    });
+                    
+                    // If no entries match search
+                    if (!hasVisibleEntries && searchTerm) {
+                        entriesContainer.innerHTML = `
+                            <div style="grid-column: 1 / -1; text-align: center; color: var(--text-light); padding: 30px;">
+                                No entries match your search for "${searchTerm}"
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading entries:", error);
+                    entriesContainer.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; color: var(--error); padding: 30px;">
+                            Error loading entries. Please try refreshing the page.
+                        </div>
+                    `;
+                });
+        }
+        
+        // Create Entry Card
+        function createEntryCard(id, entry) {
+            const card = document.createElement('div');
+            card.className = 'entry-card';
+            
+            // Format the date
+            let dateString = 'Just now';
+            if (entry.createdAt) {
+                const date = entry.createdAt.toDate();
+                dateString = date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            }
+            
+            card.innerHTML = `
+                <div class="entry-header">
+                    <div class="entry-title">${entry.title}</div>
+                    <div class="entry-date">${dateString}</div>
+                </div>
+                <div class="entry-preview">${entry.content}</div>
+            `;
+            
+            card.addEventListener('click', () => {
+                modalTitle.textContent = "Edit Diary Entry";
+                entryIdInput.value = id;
+                entryTitleInput.value = entry.title;
+                entryContentInput.value = entry.content;
+                deleteEntryBtn.style.display = 'block';
+                entryModal.style.display = 'flex';
+            });
+            
+            entriesContainer.appendChild(card);
+        }
+        
+        // Search functionality
+        searchInput.addEventListener('input', () => {
+            loadEntries();
+        });
+        
+        // Helper functions
+        function showMessage(element, text, type) {
+            element.textContent = text;
+            element.className = `message ${type}`;
+            element.style.display = 'block';
+        }
+        
+        function hideMessage(element) {
+            element.style.display = 'none';
+        }
+
+        // Initialize the user account (run this once manually when setting up)
+        function initializeUserAccount() {
+            // This should be run only once when setting up your diary
+            auth.createUserWithEmailAndPassword(DIARY_EMAIL, DIARY_PASSWORD)
+                .then(() => {
+                    console.log("User account created successfully!");
+                    // After creating the account, comment out or remove this function call
+                })
+                .catch(error => {
+                    // If the account already exists, this is fine
+                    if (error.code === 'auth/email-already-in-use') {
+                        console.log("Account already exists, which is expected.");
+                    } else {
+                        console.error("Error creating account:", error);
+                    }
+                });
+        }
+        
+        // IMPORTANT: Uncomment the line below ONCE to create your account
+        // Then comment it out again for security
+        // initializeUserAccount();
+    </script>
+</body>
+</html>
