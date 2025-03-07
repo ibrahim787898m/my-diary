@@ -947,125 +947,151 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Calendar view
-    function toggleCalendar() {
-    if (calendarWidget.style.display === 'block') {
-        calendarWidget.style.display = 'none';
-        toggleCalendarBtn.textContent = 'Show Calendar';
-    } else {
-        calendarWidget.style.display = 'block';
+
+
+    // Calendar view functions
+function toggleCalendar() {
+    const isHidden = calendarWidget.style.display === 'none' || !calendarWidget.style.display;
+    
+    if (isHidden) {
+        showView(calendarWidget);
         toggleCalendarBtn.textContent = 'Hide Calendar';
         renderCalendar();
+    } else {
+        hideView(calendarWidget);
+        toggleCalendarBtn.textContent = 'Show Calendar';
     }
+}
+
+function renderCalendar() {
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    
+    // Update header
+    calendarMonthYear.textContent = new Date(year, month, 1).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric'
+    });
+    
+    // Get first day of month and total days
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // Get days from previous month
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
+    // Clear calendar
+    calendarDays.innerHTML = '';
+    
+    // Fill previous month days
+    for (let i = 0; i < firstDay; i++) {
+        const day = daysInPrevMonth - firstDay + i + 1;
+        const prevMonth = new Date(year, month - 1, day);
+        addCalendarDay(day, 'other-month', prevMonth);
     }
-
-    function renderCalendar() {
-        const year = currentCalendarDate.getFullYear();
-        const month = currentCalendarDate.getMonth();
+    
+    // Current month days
+    const today = new Date();
+    for (let i = 1; i <= daysInMonth; i++) {
+        const date = new Date(year, month, i);
+        const isToday = 
+            today.getDate() === i && 
+            today.getMonth() === month && 
+            today.getFullYear() === year;
         
-        // Update header
-        calendarMonthYear.textContent = new Date(year, month, 1).toLocaleDateString('en-US', {
-            month: 'long',
-            year: 'numeric'
-        });
+        const classes = [];
+        if (isToday) classes.push('today');
         
-        // Get first day of month and total days
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
-        // Get days from previous month
-        const daysInPrevMonth = new Date(year, month, 0).getDate();
-        
-        // Clear calendar
-        calendarDays.innerHTML = '';
-        
-        // Fill previous month days
-        for (let i = 0; i < firstDay; i++) {
-            const day = daysInPrevMonth - firstDay + i + 1;
-            addCalendarDay(day, 'other-month', new Date(year, month - 1, day));
-        }
-        
-        // Current month days
-        const today = new Date();
-        for (let i = 1; i <= daysInMonth; i++) {
-            const date = new Date(year, month, i);
-            const isToday = 
-                today.getDate() === i && 
-                today.getMonth() === month && 
-                today.getFullYear() === year;
-            
-            const classes = [];
-            if (isToday) classes.push('today');
-            if (hasEntry(date)) classes.push('has-entry');
-            
-            addCalendarDay(i, classes.join(' '), date);
-        }
-        
-        // Next month days
-        const totalCells = 42; // 6 rows x 7 days
-        const remainingCells = totalCells - (firstDay + daysInMonth);
-        for (let i = 1; i <= remainingCells; i++) {
-            addCalendarDay(i, 'other-month', new Date(year, month + 1, i));
-        }
+        addCalendarDay(i, classes.join(' '), date);
     }
+    
+    // Next month days
+    const totalCells = 42; // 6 rows x 7 days
+    const remainingCells = totalCells - (firstDay + daysInMonth);
+    for (let i = 1; i <= remainingCells; i++) {
+        const nextMonth = new Date(year, month + 1, i);
+        addCalendarDay(i, 'other-month', nextMonth);
+    }
+}
 
-
-// Updated function to add calendar day elements with proper date filtering
 function addCalendarDay(day, className, date) {
     const dayElement = document.createElement('div');
     dayElement.className = 'calendar-day ' + className;
     dayElement.textContent = day;
     
-    // Format the date string in a consistent format
-    const dateString = date.toLocaleDateString();
+    // Check if this date has any entries
+    const hasEntryOnDay = checkForEntries(date);
     
-    // If this day has entries, make it clickable
-    if (entryDates.has(dateString)) {
+    if (hasEntryOnDay) {
         dayElement.classList.add('has-entry');
+        
+        // Make the day clickable
         dayElement.addEventListener('click', () => {
-            // Reset the search input
-            searchInput.value = '';
-            
-            // Filter to the specific day
-            const dayStart = new Date(date);
-            dayStart.setHours(0, 0, 0, 0);
-            
-            const dayEnd = new Date(date);
-            dayEnd.setHours(23, 59, 59, 999);
-            
-            // Filter entries for this specific day
-            filteredEntries = allEntries.filter(entry => {
-                const entryDate = new Date(entry.timestamp);
-                return entryDate >= dayStart && entryDate <= dayEnd;
-            });
-            
-            // Update filter dropdowns to match the selected date
-            monthSelect.value = date.getMonth();
-            yearSelect.value = date.getFullYear();
-            
-            // Reset to first page and display the filtered entries
-            currentPage = 1;
-            displayEntries();
+            filterEntriesByDay(date);
         });
     }
     
     calendarDays.appendChild(dayElement);
 }
-    
 
-    // Updated hasEntry function to properly check for entries on a specific date
-function hasEntry(date) {
-    // Format the date in a consistent way for comparison
-    const dateString = date.toLocaleDateString();
+function checkForEntries(date) {
+    // Need to compare just the date portion, not the time
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
     
-    // Check if we have any entries for this date
-    return entryDates.has(dateString);
+    // Check if any entries match this date
+    return allEntries.some(entry => {
+        const entryDate = new Date(entry.timestamp);
+        return entryDate.getFullYear() === year && 
+               entryDate.getMonth() === month && 
+               entryDate.getDate() === day;
+    });
 }
 
-    function navigateMonth(change) {
-        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + change);
-        renderCalendar();
-    }
+function filterEntriesByDay(date) {
+    // Reset the search input
+    searchInput.value = '';
+    
+    // Create date range for the selected day (start of day to end of day)
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    console.log(`Filtering entries between ${startOfDay} and ${endOfDay}`);
+    
+    // Filter entries for this specific day
+    filteredEntries = allEntries.filter(entry => {
+        const entryTimestamp = entry.timestamp;
+        return entryTimestamp >= startOfDay && entryTimestamp <= endOfDay;
+    });
+    
+    console.log(`Found ${filteredEntries.length} entries for this day`);
+    
+    // Update filter dropdowns to match the selected date
+    monthSelect.value = date.getMonth();
+    yearSelect.value = date.getFullYear();
+    
+    // Reset to first page and display the filtered entries
+    currentPage = 1;
+    displayEntries();
+}
 
+function navigateMonth(change) {
+    // Create a new Date object based on the current calendar date
+    const newDate = new Date(currentCalendarDate);
+    // Add the change (1 for next month, -1 for previous month)
+    newDate.setMonth(newDate.getMonth() + change);
+    // Update the current calendar date with the new date
+    currentCalendarDate = newDate;
+    // Re-render the calendar with the updated date
+    renderCalendar();
+}
+
+
+    
     // Entry modal functions
     function openNewEntryModal() {
         modalTitle.textContent = 'New Diary Entry';
